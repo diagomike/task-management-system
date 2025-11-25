@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  metadata    Json?     // Optional key-value data storage
+  isLeaf      Boolean   @default(true)
+  parentId    String?   @db.ObjectId
+  parent      Project?  @relation("ProjectHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children    Project[] @relation("ProjectHierarchy")
+  tasks       Task[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  order       Int       @default(0)
+}
+
+model Task {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  status      TaskStatus @default(READY)
+  metadata    Json?      // Optional key-value data for task steps
+  projectId   String     @db.ObjectId
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum TaskStatus {
+  READY
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
