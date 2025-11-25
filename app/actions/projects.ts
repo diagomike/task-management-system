@@ -33,6 +33,68 @@ export async function getProject(id: string) {
   })
 }
 
+export async function getAllNonLeafProjects(): Promise<
+  { id: string; name: string; depth: number }[]
+> {
+  // Get all projects that can be parents (non-leaf or any project since containers can have children)
+  const allProjects = await prisma.project.findMany({
+    where: {
+      isLeaf: false,
+    },
+    select: {
+      id: true,
+      name: true,
+      parentId: true,
+    },
+    orderBy: { name: "asc" },
+  });
+
+  // Also include root-level projects that could become parents
+  const rootProjects = await prisma.project.findMany({
+    where: {
+      parentId: null,
+    },
+    select: {
+      id: true,
+      name: true,
+      parentId: true,
+      isLeaf: true,
+    },
+    orderBy: { name: "asc" },
+  });
+
+  // Merge and deduplicate
+  const projectMap = new Map<
+    string,
+    { id: string; name: string; parentId: string | null }
+  >();
+
+  for (const p of allProjects) {
+    projectMap.set(p.id, p);
+  }
+  for (const p of rootProjects) {
+    if (!projectMap.has(p.id)) {
+      projectMap.set(p.id, { id: p.id, name: p.name, parentId: p.parentId });
+    }
+  }
+
+  const projects = Array.from(projectMap.values());
+
+  // Build hierarchy with depth for display
+  const result: { id: string; name: string; depth: number }[] = [];
+
+  function addWithDepth(parentId: string | null, depth: number) {
+    const children = projects.filter((p) => p.parentId === parentId);
+    for (const child of children) {
+      result.push({ id: child.id, name: child.name, depth });
+      addWithDepth(child.id, depth + 1);
+    }
+  }
+
+  addWithDepth(null, 0);
+  return result;
+}
+
 export async function createProject(data: {
   name: string
   description?: string
@@ -40,13 +102,15 @@ export async function createProject(data: {
   parentId?: string
   isLeaf?: boolean
 }) {
+  const isLeaf = data.isLeaf ?? false;
+
   const project = await prisma.project.create({
     data: {
       name: data.name,
       description: data.description,
       metadata: data.metadata,
       parentId: data.parentId,
-      isLeaf: data.isLeaf ?? true,
+      isLeaf: isLeaf,
     },
   })
 
