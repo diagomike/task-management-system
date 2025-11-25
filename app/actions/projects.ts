@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 export async function getProjects() {
   return prisma.project.findMany({
-    where: { parentId: null },
+    where: { parentId: { not: { isSet: true } } },
     include: {
       children: true,
       tasks: {
@@ -52,7 +52,7 @@ export async function getAllNonLeafProjects(): Promise<
   // Also include root-level projects that could become parents
   const rootProjects = await prisma.project.findMany({
     where: {
-      parentId: null,
+      parentId: { not: { isSet: true } },
     },
     select: {
       id: true,
