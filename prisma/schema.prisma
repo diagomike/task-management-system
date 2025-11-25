@@ -11,7 +11,7 @@ model Project {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   description String?
-  metadata    Json? // Optional key-value data storage
+  metadata    Json?     // Optional key-value data storage
   isLeaf      Boolean   @default(true)
   parentId    String?   @db.ObjectId
   parent      Project?  @relation("ProjectHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -27,7 +27,7 @@ model Task {
   title       String
   description String?
   status      TaskStatus @default(READY)
-  metadata    Json? // Optional key-value data for task steps
+  metadata    Json?      // Optional key-value data for task steps
   projectId   String     @db.ObjectId
   project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   order       Int        @default(0)
