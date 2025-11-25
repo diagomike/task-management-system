@@ -1,11 +1,11 @@
-import { getProjects } from "@/app/actions/projects"
-import { ProjectCard } from "@/components/project-card"
-import { CreateProjectDialog } from "@/components/create-project-dialog"
-import { LayoutGrid } from "lucide-react"
+import { getProjects } from "@/app/actions/projects";
+import { ProjectCard } from "@/components/project-card";
+import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { LayoutGrid } from "lucide-react";
 
 export default async function HomePage() {
-  const projects = await getProjects()
-
+  const projects = await getProjects();
+  console.log(projects);
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -52,5 +52,5 @@ export default async function HomePage() {
         )}
       </main>
     </div>
-  )
+  );
 }
